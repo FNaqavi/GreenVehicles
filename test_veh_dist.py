@@ -11,9 +11,6 @@ import matplotlib.pyplot as plt
 
 
 df = pd.read_csv('test_veh.csv',',', index_col=False, encoding='latin1')
-
-
-
 x = df.totalprice
 y = [df.FuelCat == 'AFV']
 

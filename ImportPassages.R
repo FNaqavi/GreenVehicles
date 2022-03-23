@@ -1,6 +1,6 @@
 # Load and organize data files
 
-setwd("C:/Users/naqavi/OneDrive - KTH/!Joel/Passages")
+setwd("C:/Users/naqavi/OneDrive - KTH/!Joel/Passages/GreenVehicles")
 
 library(tidyverse)
 library(dplyr)

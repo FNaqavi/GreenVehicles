@@ -1,7 +1,7 @@
 # Reallocate some passages' cars to control group
 # Be sure run ImportPassages first, and either run ImportRegistry or set "share.clean.f09".
 
-setwd("C:/Users/naqavi/OneDrive - KTH/!Joel/Passages")
+setwd("C:/Users/naqavi/OneDrive - KTH/!Joel/Passages/GreenVehicles")
 
 library(tidyverse, magrittr, lubridate)
 
