@@ -103,7 +103,7 @@ cols = {'Juridisk eller fysisk','Ny ägare mellan period 1 och 2',
             'Ägare postnr','Ägare ort','Drivmedel', 'FuelCat','Ort',
             'Kommun','expgrp'}
 vehicles = pd.DataFrame(x[cols])
-del x
+del x, cols
 
 # Also create the first long vehicles table (separate rows for each Year)
 veh_year_2012 = vehicles.copy()
@@ -182,10 +182,57 @@ data_2013.plot.kde(figsize = (8, 6), linewidth = 1 )
 plt.xlim(-100,600)
 plt.xlabel('total nominal price of crossing 2013')
 
-del maskAFV_exepmt_2012, maskAFV_exepmt_2013, x, y
+del maskAFV_exepmt_2012, maskAFV_exepmt_2013, x, y, data_2012, data_2013, df
+
+#%% 
+veh_year['count'] = 1
+x = veh_year.groupby(['Kommun','FuelCat']).count()
+x = x['count']
+ax = x.unstack(level=1).plot(kind='bar', subplots=False,  figsize=(9, 7))
+plt.tight_layout()
+del x
+
+veh_year_AFV = veh_year[veh_year['FuelCat'] == 'AFV']
+x1 = veh_year_AFV[{'totalprice','Kommun'}]
+x1 = x1.groupby(['Kommun']).sum()
+x1 = x1.unstack()
+ax = x1.unstack(level=1).plot(kind='bar', subplots=False, rot = 0, figsize=(9, 7))
+plt.tight_layout()
 
 
 
 
 
+#from sklearn.cluster import KMeans
+#mask = veh_year[veh_year['FuelCat'] == 'AFV']
+#X = mask[{'totalprice','Kommun'}]
+#kmeans = KMeans(n_clusters=2, random_state=0).fit(X, y=None, sample_weight=None)
+
+# def Kommun_to_numeric(x):
+#         if x=='STOCKHOLM': return 1
+#         if x=='SOLLENTUNA':   return 2
+#         if x=='VÄRMDÖ': return 
+#         if x=='TÄBY': return 
+#         if x=='NACKA': return 
+#         if x=='DANDERYD': return 
+#         if x=='VALLENTUNA': return 
+#         if x=='LIDINGÖ': return 
+#         if x=='EKERÖ': return 
+#         if x=='JÄRFÄLLA': return 
+#         if x=='HUDDINGE': return 
+#         if x=='TYRESÖ': return 
+#         if x=='SALEM': return 
+#         if x=='SOLNA': return 
+#         if x=='VAXHOLM': return 
+#         if x=='ÖSTERÅKER': return 
+#         if x=='NYNÄSHAMN': return
+#         if x=='HANINGE': return
+#         if x=='BOTKYRKA': return
+#         if x=='SÖDERTÄLJE': return
+#         if x=='UPPLANDS-BRO': return
+#         if x=='SUNDBYBERG': return
+#         if x=='SIGTUNA': return
+#         if x=='NORRTÄLJE': return
+#         if x=='NYKVARN': return
+#         if x=='UPPLANDS VÄSBY': return
 
