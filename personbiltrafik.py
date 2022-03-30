@@ -93,11 +93,10 @@ nyreg_2011 =  clean_df(nyreg_2011, 2011, 1, 1)
 nyreg_2012 =  clean_df(nyreg_2012, 2012, 1, 1)
 nyreg_2013 =  clean_df(nyreg_2013, 2013, 1, 0)
 
+#%%
 # merge in traffic and new registered cars. left columns are in trafik cars.
 def merge_itrafik_nyreg(df_itrafik, df_nyreg, kod1):
     res = pd.merge(df_itrafik, df_nyreg, on=['year','Kommun','kommun_kod','komkod_year'], suffixes=('', '_ny'))
-    res['Miljöbil_itrafik']= res.iloc[:, 6:11].sum(axis=1)      ## check this
-    res['Miljöbil_nyreg']= res.iloc[:, 14:19].sum(axis=1)       ## check this
     return res
 
 res_2006 = merge_itrafik_nyreg(bil_i_trafik_2006, nyreg_2006, 0)
@@ -114,6 +113,12 @@ del frames1
 
 # sort based on Kommun and year
 data.sort_values(by=['Kommun','year'], inplace = True)
+
+def miljöbil_sum(df):
+    df['Miljöbil']= df.iloc[:, 4:9].sum(axis=1)      
+    df['Miljöbil_ny']= df.iloc[:, 14:19].sum(axis=1)      
+    return df
+data = miljöbil_sum(data)
 
 #defining variables from 2009 (f09) anf up to 2008 (t08)
 data['Bensin_f09'] = 0
@@ -163,12 +168,19 @@ data['Naturgas_Biogas_t08'] = data['Naturgas_Biogas'] - data['Naturgas_Biogas_f0
 data['Övriga_t08'] = data['Övriga'] - data['Övriga_f09']
 data['Totalt_t08'] = data['Totalt'] - data['Totalt_f09']
 
+# replace negative numbers in t08 with 0
+d = data.drop('Kommun', axis = 1)
+d[d<0] = 0
+data = pd.merge(data['Kommun'], d , left_index=True, right_index = True)
+
 # removing extras
-del res_2006, res_2007, res_2008, res_2009, res_2010, res_2011, res_2012, res_2013
+del d, res_2006, res_2007, res_2008, res_2009, res_2010, res_2011, res_2012, res_2013
 del bil_i_trafik_2006, bil_i_trafik_2007, bil_i_trafik_2008, bil_i_trafik_2009, bil_i_trafik_2010
 del bil_i_trafik_2011, bil_i_trafik_2012, bil_i_trafik_2013
 del nyreg_2006, nyreg_2007, nyreg_2008, nyreg_2009, nyreg_2010, nyreg_2011, nyreg_2012, nyreg_2013
 
+data['ee_index'] = data['Miljöbil'] / data['Totalt']
+data['rr_index'] = data['Totalt_ny'] / data['Totalt']
 
 # %% Trun dataframe to sql table 
 
