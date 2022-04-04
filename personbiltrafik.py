@@ -33,7 +33,7 @@ def clean_df(df, year, kod1, kod2):
     kommun_kods1 = [114, 115, 117, 120, 123, 125, 126, 127, 128, 136, 138, 139, 140,
                160, 162, 163, 180, 181, 182, 183, 184, 186, 187, 188, 191, 192]
     
-    df['Unnamed: 0'][4] = 'kommun_kod'
+    df.loc[4,'Unnamed: 0'] = 'kommun_kod'
     df.rename(columns=df.iloc[4], inplace = True)
     df.drop([5], inplace = True)
     df = df.tail(df.shape[0] -5)
@@ -113,14 +113,13 @@ del frames1
 
 # sort based on Kommun and year
 data.sort_values(by=['Kommun','year'], inplace = True)
-
-def miljöbil_sum(df):
-    df['Miljöbil']= df.iloc[:, 4:9].sum(axis=1)      
-    df['Miljöbil_ny']= df.iloc[:, 14:19].sum(axis=1)      
-    return df
-data = miljöbil_sum(data)
+data['Miljöbil']= data.iloc[:, 4:9].sum(axis=1)      
+data['Miljöbil_ny']= data.iloc[:, 14:19].sum(axis=1)      
+data.loc[:,'CV'] = data['Bensin'] + data['Diesel']
+data.loc[:,'CV_ny'] = data['Bensin_ny'] + data['Diesel_ny']
 
 #defining variables from 2009 (f09) anf up to 2008 (t08)
+
 data['Bensin_f09'] = 0
 data['Diesel_f09'] = 0
 data['El_f09'] = 0
@@ -137,6 +136,10 @@ data['Övriga_hybrider_t08'] = 0
 data['Naturgas_Biogas_t08'] = 0
 data['Övriga_t08'] = 0
 data['Totalt_t08'] = 0
+data['CV_f09'] = 0
+data['AFV_f09'] = 0
+data['CV_t08'] = 0
+data['AFV_t08'] = 0
 
 def cumsum_f09_t08 (data):
     d= data
@@ -145,14 +148,17 @@ def cumsum_f09_t08 (data):
     d['Reset'] = condition.groupby(d.Bensin).cumsum()
     for i in range(len(idx)):    
         x = d[d['Kommun'] == idx[i]] 
-        x['Bensin_f09']  = (x['Bensin_ny'] * x['Reset']).cumsum()
-        x['Diesel_f09'] = (x['Diesel_ny'] * x['Reset']).cumsum() 
-        x['El_f09'] = (x['El_ny'] * x['Reset']).cumsum() 
-        x['Etanol_hybrid_f09'] = (x['Etanol_hybrid_ny'] * x['Reset']).cumsum() 
-        x['Övriga_hybrider_f09'] = (x['Övriga_hybrider_ny'] * x['Reset']).cumsum() 
-        x['Naturgas_Biogas_f09']= (x['Naturgas_Biogas_ny'] * x['Reset']).cumsum() 
-        x['Övriga_f09'] = (x['Övriga_ny'] * x['Reset']).cumsum() 
-        x['Totalt_f09'] = (x['Totalt_ny'] * x['Reset']).cumsum() 
+        x.loc[:,'Bensin_f09']  = (x['Bensin_ny'] * x['Reset']).cumsum()
+        x.loc[:,'Diesel_f09'] = (x['Diesel_ny'] * x['Reset']).cumsum() 
+        x.loc[:,'El_f09'] = (x['El_ny'] * x['Reset']).cumsum() 
+        x.loc[:,'Etanol_hybrid_f09'] = (x['Etanol_hybrid_ny'] * x['Reset']).cumsum() 
+        x.loc[:,'Övriga_hybrider_f09'] = (x['Övriga_hybrider_ny'] * x['Reset']).cumsum() 
+        x.loc[:,'Naturgas_Biogas_f09']= (x['Naturgas_Biogas_ny'] * x['Reset']).cumsum() 
+        x.loc[:,'Övriga_f09'] = (x['Övriga_ny'] * x['Reset']).cumsum() 
+        x.loc[:,'Totalt_f09'] = (x['Totalt_ny'] * x['Reset']).cumsum() 
+        x.loc[:,'CV_f09'] = (x['CV_ny']* x['Reset']).cumsum()
+        x.loc[:,'AFV_f09'] = (x['Miljöbil_ny']* x['Reset']).cumsum()  
+        
         d[d['Kommun'] == idx[i]]  = x
     d.drop('Reset', axis = 1, inplace = True)   
     return d        
@@ -167,6 +173,9 @@ data['Övriga_hybrider_t08'] = data['Övriga_hybrider'] - data['Övriga_hybrider
 data['Naturgas_Biogas_t08'] = data['Naturgas_Biogas'] - data['Naturgas_Biogas_f09']
 data['Övriga_t08'] = data['Övriga'] - data['Övriga_f09']
 data['Totalt_t08'] = data['Totalt'] - data['Totalt_f09']
+data['AFV_t08'] = data['Miljöbil'] - data['AFV_f09']
+data['CV_t08'] = data['CV'] - data['CV_f09']
+
 
 # replace negative numbers in t08 with 0
 d = data.drop('Kommun', axis = 1)
@@ -181,6 +190,72 @@ del nyreg_2006, nyreg_2007, nyreg_2008, nyreg_2009, nyreg_2010, nyreg_2011, nyre
 
 data['ee_index'] = data['Miljöbil'] / data['Totalt']
 data['rr_index'] = data['Totalt_ny'] / data['Totalt']
+
+mask = data[(data['year'] == 2012) | (data['year'] == 2013)]
+d = mask[{'Kommun','year','AFV_t08','CV_t08', 'Totalt_f09','Totalt_t08','CV_f09','AFV_f09'}]
+del mask
+
+#%%
+
+veh_year = pd.read_csv('veh_year.csv', encoding='latin 1')
+data_veh = veh_year[{'AnonymRegno','Kommun','FuelCat','expgrp','year','totalprice'}]
+del veh_year
+
+#data_veh['expgrp'].replace({'Exempt in 2012' : 0, 'Paying in 2012' :1}, regex=True, inplace = True)
+mask = data_veh.groupby(['FuelCat','year','Kommun']).count().rename(columns = {'totalprice':'count'}).iloc[:,-1]
+mask_price = data_veh.groupby(['FuelCat','year','Kommun']).sum()
+mask_price['count'] = mask
+df = mask_price.reset_index()  
+del mask, mask_price
+
+
+#%%
+import matplotlib.pyplot as plt
+
+# share of AFV vehicles in 2012 and 2013 for vehcile and Kommun data
+d['p_AFV_f09'] = 100* d['AFV_f09'] /(d['AFV_f09'] + d['AFV_t08'])     # gives warning
+d['p_AFV_t08'] = 100* d['AFV_t08'] /(d['AFV_f09'] + d['AFV_t08'])    # gives warning
+
+AFV_mask_f09 = d[{'Kommun','year','p_AFV_f09'}]
+AFV_mask_t08 = d[{'Kommun','year','p_AFV_t08'}]
+
+AFV_mask_2012_f09 = AFV_mask_f09[AFV_mask_f09['year'] == 2012]
+AFV_mask_2012_t08 = AFV_mask_t08[AFV_mask_t08['year'] == 2012]
+AFV_mask_2013_f09 = AFV_mask_f09[AFV_mask_f09['year'] == 2013]
+AFV_mask_2013_t08 = AFV_mask_t08[AFV_mask_t08['year'] == 2013]
+
+# share of AFV vehicles up to 2008 and after 2009 for passages data
+df_AFV = df[df['FuelCat'] == 'AFV']
+df_AFV = df_AFV[df_AFV['year'] == 2013].reset_index()
+
+y1 = AFV_mask_2012_f09['p_AFV_f09']
+y2 = AFV_mask_2012_t08['p_AFV_t08']
+
+x = AFV_mask_2012_f09['Kommun']
+plt.figure(figsize=(20, 3))
+plt.bar(x,y1, color = 'b', alpha=0.7, label = 'AFV share after 2009')
+plt.bar(x,y2, bottom=y1, color = 'g', alpha=0.6, label = 'AFV share before 2008')
+plt.xticks(rotation=90)
+plt.legend(loc = 'upper right')
+plt.xlabel('share of AFV from 2009 in 2012 in the personbil data')
+
+y3 = AFV_mask_2013_f09['p_AFV_f09']
+y4 = AFV_mask_2013_t08['p_AFV_t08']
+
+x = AFV_mask_2012_f09['Kommun']
+plt.figure(figsize=(20, 3))
+plt.bar(x,y3, color = 'b', alpha=0.7, label = 'AFV share after 2009')
+plt.bar(x,y4, bottom=y3, color = 'g', alpha=0.6, label = 'AFV share before 2008')
+
+plt.xticks(rotation=90)
+plt.legend(loc = 'upper right')
+plt.xlabel('share of AFV from 2009 in 2013 in the personbil data')
+
+del x, y1, y2, y3, y4, df_AFV, AFV_mask_2012_f09, AFV_mask_2013_f09
+del AFV_mask_2012_t08, AFV_mask_2013_t08, AFV_mask_f09, AFV_mask_t08 
+
+
+
 
 # %% Trun dataframe to sql table 
 
