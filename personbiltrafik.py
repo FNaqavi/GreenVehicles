@@ -198,6 +198,8 @@ mask = data[(data['year'] == 2012) | (data['year'] == 2013)]
 d = mask[{'Kommun','year','AFV_t08','CV_t08', 'Totalt_f09','Totalt_t08','CV_f09','AFV_f09'}].reset_index(drop = True)
 del mask
 
+d.to_csv(r'C:\Users\naqavi\OneDrive - KTH\!Joel\Passages\GreenVehicles\registry_data.csv', encoding = 'latin1')
+
 #%% Import vehicle data (from excel file of registry)
 
 veh_year = pd.read_csv('veh_year.csv', encoding='latin 1')
@@ -239,7 +241,7 @@ plt.bar(x,y1, color = 'navy', alpha=1, label = 'AFV share after 2009')
 plt.bar(x,y2, bottom=y1, color = 'darkred', alpha=1, label = 'AFV share before 2008')
 plt.xticks(rotation=90)
 plt.legend(loc = 'upper right')
-plt.xlabel('share of AFV from 2009 in 2012 in the personbil data')
+plt.xlabel('share of AFV in 2012 in the personbil data')
 
 x = AFV_mask_f09_2012['Kommun']
 y3 = AFV_mask_f09_2013['p_AFV_f09']
@@ -249,19 +251,10 @@ plt.bar(x,y3, color = 'navy', alpha=1, label = 'AFV share after 2009')
 plt.bar(x,y4, bottom=y3, color = 'darkred', alpha=1, label = 'AFV share before 2008')
 plt.xticks(rotation=90)
 plt.legend(loc = 'upper right')
-plt.xlabel('share of AFV from 2009 in 2013 in the personbil data')
+plt.xlabel('share of AFV in 2013 in the personbil data')
 
 del x, y1, y2, y3, y4, df_AFV, AFV_mask_f09_2012, AFV_mask_f09_2013
-del AFV_mask_t08_2012, AFV_mask_t08_2013, AFV_mask_f09, AFV_mask_t08 
-
-# x = pd.DataFrame()
-# total_price_by_kommun_FuelCat = data_veh.groupby(by = ['Kommun','FuelCat']).totalprice.sum()
-# total_price_by_kommun_FuelCat = total_price_by_kommun_FuelCat.reset_index()
-# total_count_by_kommun_FuelCat = data_veh.groupby(by = ['Kommun','FuelCat']).totalprice.count()
-# total_count_by_kommun_FuelCat  = total_count_by_kommun_FuelCat.reset_index()  
-# x['avg_price'] = total_price_by_kommun_FuelCat['totalprice'] / total_count_by_kommun_FuelCat['totalprice']
-# x['FuelCat'] = total_price_by_kommun_FuelCat['FuelCat']
-# x['Kommun'] = total_price_by_kommun_FuelCat['Kommun']  
+del AFV_mask_t08_2012, AFV_mask_t08_2013, AFV_mask_f09, AFV_mask_t08  
 
 
 #%%
@@ -299,23 +292,34 @@ del price1, price2, price3, price4, price5, price6, price7, price8, price9
 # the same for 2012.
 passages = passages[passages['price'] > 0]
 
-# Extract vehicle-specific information
-x = passages.groupby(by = 'AnonymRegno').first()
-cols = {'FuelCat','Kommun','year','price'}
-vehicles = pd.DataFrame(x[cols])
-del x
-
 # remove nan values in Kommun column
 passages['Kommun'] = passages['Kommun'].astype(str)
 passages = passages[passages['Kommun'] != 'nan']
 
+# Extract vehicle-specific information
+x = passages.groupby(by = 'AnonymRegno').first()
+cols = {'FuelCat','Kommun','year','price'}
+vehicles = pd.DataFrame(x[cols])
+total_price = passages.groupby(by = 'AnonymRegno').price.sum()
+vehicles['price'] = total_price
+del x, total_price
+
+
 # filter columns in passages 
 passages1 = passages[{'AnonymRegno', 'year','FuelCat','Kommun','price'}]
+total_price = passages1.groupby(by = 'AnonymRegno').price.sum()
+passages1 = passages1.groupby('AnonymRegno').first()
+passages1.price[passages1.index == total_price.index ]= total_price
+passages1.reset_index()
 passages1['assigned'] = 0
+passages1 = passages1[passages1['Kommun'] != 'LIDINGÖ']
 # divide passages to CV and AFV dataframes
-passages1_CV = passages1[passages1['FuelCat'] == 'CV']
-passages1_AFV = passages1[passages1['FuelCat'] == 'AFV'].reset_index(drop = True)
+passages1_CV = passages1[passages1['FuelCat'] == 'CV'].reset_index()
+passages1_AFV = passages1[passages1['FuelCat'] == 'AFV'].reset_index()
 
+count = passages1_CV.groupby('Kommun').count()
+
+#%%
 # have same order for d(registry data) and passages_AFV
 d.sort_values(by = ['Kommun', 'year'], inplace = True)
 passages1_AFV.sort_values(by = ['Kommun','year'], inplace = True)
@@ -326,10 +330,10 @@ mask = mask.reset_index().sort_values(by = ['Kommun','year']).reset_index(drop =
 
 s1 = []
 s2 = []
-d_2012_AFV = d[d['year'] == 2012].reset_index(drop = True) 
+d_2012_AFV = d[d['year'] == 2012].reset_index() 
 p_lst_2012_AFV = (d_2012_AFV['p_AFV_t08']/100).tolist()
 p_lst_2012_AFV.pop(8) # AFV of Nortälje is not available in 2012 for the passages data 
-mask_2012 = mask[mask['year'] == 2012].reset_index(drop = True)
+mask_2012 = mask[mask['year'] == 2012].reset_index()
 count_2012 = (mask_2012['count']).tolist()
 mask_2012['AFVt08_2012_assigned'] = 0
 for i in range(len(count_2012)): 
@@ -340,9 +344,9 @@ mask_2012['AFVt08_2012_assigned'] = pd.Series(s2)
 
 s1 = []
 s2 = []
-d_2013_AFV = d[d['year'] == 2013].reset_index(drop = True) 
+d_2013_AFV = d[d['year'] == 2013].reset_index() 
 p_lst_2013_AFV = (d_2013_AFV['p_AFV_t08']/100).tolist()
-mask_2013 = mask[mask['year'] == 2013].reset_index(drop = True)
+mask_2013 = mask[mask['year'] == 2013].reset_index()
 count_2013 = (mask_2013['count']).tolist()
 mask_2013['AFVt08_2013_assigned'] = 0
 for i in range(len(count_2013)): 
@@ -351,7 +355,7 @@ for i in range(len(count_2013)):
     s2.append(s1)     
 mask_2013['AFVt08_2013_assigned'] = pd.Series(s2)
 
-d_con = pd.concat([mask_2012, mask_2013]).reset_index(drop = True)
+d_con = pd.concat([mask_2012, mask_2013])
 d_con['AFV_assign'] = d_con['AFVt08_2012_assigned'].fillna(0) + d_con['AFVt08_2013_assigned'].fillna(0)
 d_con.dropna(axis='columns', inplace = True)
 
@@ -362,15 +366,48 @@ ser = pd.Series(np.concatenate(xx).astype(None))
 passages1_AFV['assigned'] = ser
 
 # assigned (0: after 2009, 1: before 2008)
-passages_assigned = pd.concat([passages1_AFV,passages1_CV]).reset_index(drop = True)
+p_assigned = pd.concat([passages1_AFV,passages1_CV]).reset_index(drop = True)
+
 
 del i, c, s1, p_lst_2012_AFV, count_2012
 del p_lst_2013_AFV, count_2013
+del xx, ser
+del s2, mask, mask_2012, mask_2013, d_con, 
+del d_2012_AFV, d_2013_AFV
+
+p_assigned['expgrp'] = 0
+p_assigned.expgrp[p_assigned['assigned']== 0] = 'Paying in 2012'
+p_assigned.expgrp[p_assigned['assigned']== 1] = 'Exempt in 2012'
+
+# total_price = p_assigned.groupby(by = 'AnonymRegno').price.sum()
+
+
+#%%
+
+# p_df = pd.read_csv('test_veh.csv',',', index_col=False, encoding='latin1')
+p_df = p_assigned
+x = p_df.price
+y = [p_df.FuelCat == 'AFV']
+
+maskAFV_exepmt_2012 = p_df[p_df['expgrp']=='Paying in 2012']
+#data_2012 = maskAFV_exepmt_2012[maskAFV_exepmt_2012['year']==2012].pivot(columns = 'FuelCat', values = 'price')
+data_2012 = p_df[p_df['year']==2012].pivot(columns = 'FuelCat', values = 'price')
+data_2012.plot.kde(figsize = (8, 6), linewidth = 1)
+plt.xlim(-100,600)
+plt.xlabel('total nominal price of crossing 2012')
+
+maskAFV_exepmt_2013 = p_df[p_df['expgrp']=='Paying in 2012']
+#data_2013 = maskAFV_exepmt_2013[maskAFV_exepmt_2013['year']==2013].pivot(columns = 'FuelCat', values = 'price')
+data_2013 = p_df[p_df['year']==2013].pivot(columns = 'FuelCat', values = 'price')
+data_2013.plot.kde(figsize = (8, 6), linewidth = 1)
+plt.xlim(-100,600)
+plt.xlabel('total nominal price of crossing 2013')
 
 
 #%%
 # compute avg price weights for 2012 and 2013 for CV vehicles
 x = pd.DataFrame()
+
 veh_price_by_kommun_FuelCat = vehicles.groupby(by = ['Kommun','FuelCat','year']).price.sum()
 veh_price_by_kommun_FuelCat = veh_price_by_kommun_FuelCat.reset_index()
 veh_count_by_kommun_FuelCat = vehicles.groupby(by = ['Kommun','FuelCat','year']).price.count()
