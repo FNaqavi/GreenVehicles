@@ -7,9 +7,9 @@ Created on Fri Mar 18 13:56:07 2022
 
 from datetime import datetime
 from datetime import time
-import importPassages
 import pandas as pd
 import matplotlib.pyplot as plt
+import importPassages
 
 
 passages = importPassages.get_passages()
@@ -105,23 +105,26 @@ veh_year.drop(veh_year[x].index, inplace = True)
 del x
 
 # Compute change in nominal price
-pass_veh['totalprice_diff'] = pass_veh['totalprice_13'] - pass_veh['totalprice_12'] 
+pass_veh['totalprice_diff'] = pass_veh['totalprice_13'] - pass_veh['totalprice_12']
 
+#veh_year.to_csv(r'C:\Users\naqavi\OneDrive - KTH\!Joel\Passages\GreenVehicles\veh_year.csv', encoding = 'latin1')
+
+# %%
 # Do some density plots
 # Nominal price for 2012/2013, using long table
 df = veh_year.copy()
 x = df.totalprice
 y = [df.FuelCat == 'AFV']
 
-maskAFV_exepmt_2012 = df       # for all 2012 data
-#maskAFV_exepmt_2012 = df[df['expgrp']=='Paying in 2012']        #only for people who are paying in 2012
+#maskAFV_exepmt_2012 = df       # for all 2012 data
+maskAFV_exepmt_2012 = df[df['expgrp']=='Paying in 2012']        #only for people who are paying in 2012
 data_2012 = maskAFV_exepmt_2012[maskAFV_exepmt_2012['year']==2012].pivot(columns = 'FuelCat', values = 'totalprice')
 data_2012.plot.kde(figsize = (8, 6), linewidth = 1)
 plt.xlim(-100,600)
 plt.xlabel('total nominal price of crossing 2012')
 
-maskAFV_exepmt_2013 = df       # for all 2013 data
-#maskAFV_exepmt_2013 = df[df['expgrp']=='Paying in 2012']        #only for people who are paying in 2012
+#maskAFV_exepmt_2013 = df       # for all 2013 data
+maskAFV_exepmt_2013 = df[df['expgrp']=='Paying in 2012']        #only for people who are paying in 2012
 data_2013 = maskAFV_exepmt_2013[maskAFV_exepmt_2013['year']==2013].pivot(columns = 'FuelCat', values = 'totalprice')
 data_2013.plot.kde(figsize = (8, 6), linewidth = 1 )
 plt.xlim(-100,600)
