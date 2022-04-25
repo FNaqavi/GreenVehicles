@@ -5,14 +5,14 @@ Created on Thu Apr  7 11:36:49 2022
 @author: naqavi
 """
 
-import numpy as np
+# import numpy as np
 from GV_exepmtion_kommun_assignment import GV_share_assignment
 from create_veh_pass import create_veh_pass
-from sklearn.neighbors import KernelDensity
+# from sklearn.neighbors import KernelDensity
 import pandas as pd
-import matplotlib.pyplot as plt
-from fitter import Fitter
-from fitter import get_common_distributions
+# import matplotlib.pyplot as plt
+# from fitter import Fitter
+# from fitter import get_common_distributions
 from scipy.stats import cauchy
 
 
@@ -93,14 +93,19 @@ p_ntpr1 = p_ntpr1.fillna(-1)
 p_ntpr1.sort_values(by = ['AnonymRegno'], inplace = True)
 p_assigned.sort_values(by = ['AnonymRegno'], inplace= True)
 p_assigned['ntpr_CV'] = p_ntpr1['ntpr_CV']
- 
+del x, x1, x2, y1, y_series, scale, loc, p_ntpr, p_ntpr1, p_AFV, p_CV
 
 
+p['peak'] = 0
+p.peak[p['price'] == 10] = -1
+p.peak[p['price'] == 15] = 0
+p.peak[p['price'] == 20] = 1
+p_CV = p[p.FuelCat == 'CV']
+p_CV.sort_values(by = ['AnonymRegno','passagedate','passagetime'], inplace = True)
 
-
-
-
-
+p_CV_ofpk = p_CV[p_CV['peak'] == -1]
+p_CV_trpk = p_CV[p_CV['peak'] == 0]
+p_CV_pk = p_CV[p_CV['peak'] == 1]
 
 
 
