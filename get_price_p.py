@@ -5,7 +5,6 @@ Created on Thu Apr  7 11:36:49 2022
 @author: naqavi
 """
 
-# import numpy as np
 from GV_exepmtion_kommun_assignment import GV_share_assignment
 from create_veh_pass import create_veh_pass
 # from sklearn.neighbors import KernelDensity
@@ -96,52 +95,6 @@ p_assigned['ntpr_CV'] = p_ntpr1['ntpr_CV']
 del x, x1, x2, y1, y_series, scale, loc, p_ntpr, p_ntpr1, p_AFV, p_CV
 
 
-p['peak'] = 0
-p.peak[p['price'] == 10] = -1
-p.peak[p['price'] == 15] = 0
-p.peak[p['price'] == 20] = 1
-p_CV = p[p.FuelCat == 'CV']
-p_CV.sort_values(by = ['AnonymRegno','passagedate','passagetime'], inplace = True)
-
-p_CV_ofpk = p_CV[p_CV['peak'] == -1]
-p_CV_trpk = p_CV[p_CV['peak'] == 0]
-p_CV_pk = p_CV[p_CV['peak'] == 1]
-
-
-
-
-#for i in range(len(idx_lst)):
-# i = 2
-# j = idx_lst[i]
-# p_CV_i = p_CV[p_CV['Kommun'] == j]
-# p_AFV_i = p_AFV[p_AFV['Kommun'] == j]
-# print (j)
-    # if len(p_CV_i)>30: 
-        # x = p_CV.delta_pr  
-        # x.plot.kde(figsize = (8, 6), linewidth = 1, bw_method=0.3)
-        # plt.xlim(-600,600)
-        # plt.xlabel()
-    
-        # x1 = np.array(x).reshape(-1,1)
-        # kde = KernelDensity(kernel = 'gaussian', bandwidth=0.3).fit(x1)
-        # y = np.array(p_AFV_i.delta_pr).reshape(-1,1)
-        # kde_score = kde.score_samples(y)
-        # pr_CV = np.exp(kde_score)
-        # p_AFV_i.pr_CV.loc[p_AFV['Kommun'] == j] = pr_CV
-        # # p_AFV.pr_CV.loc[p_AFV['Kommun'] == j] = pr_CV
-            
-        # del x, x1, kde, df_lst, pr_CV, p_CV_i, kde_score
-        
-        # xxx = range(len(np.cumsum(p_CV['pr_CV'])))
-        # plt.plot(xxx,np.cumsum(p_CV['pr_CV']))
-        # # plt.xlim()
-        # plt.xlabel('Cumulative Distribution Function for CV and AFV')
-        # xxx = range(len(np.cumsum(p_AFV['pr_CV'])))
-        # plt.plot(xxx,np.cumsum(p_AFV['pr_CV']))
-        # # plt.xlim()
-        
-        # plt.show()
-    
 
 # {'cauchy': {'loc': -9.022352452470182, 'scale': 39.37919633573871}} For all points in CV
 # {'cauchy': {'loc': -10.840516278685193, 'scale': 43.352452247121676}} For Stockholm in CV
