@@ -15,7 +15,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 p_assigned, passages = GV_share_assignment()
-veh_year, pass_veh = create_veh_pass()
+veh_year, pass_veh = create_veh_pass(passages)
 
 passages.reset_index(drop = True, inplace = True)
 passages['d']  = [datetime.combine(passages['passagedate'][i], passages['passagetime'][i])  for i in range(len(passages))]
@@ -55,4 +55,4 @@ for i in range(len(idx_unq)):
     df1 = get_toll_days(passages, i)
     pass_new = pd.concat([df1,pass_new])
     
-pass_new.to_csv('pass_new.csv',encoding = 'latin1')
+# pass_new.to_csv('pass_new.csv',encoding = 'latin1')

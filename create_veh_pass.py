@@ -8,11 +8,11 @@ This file is used to create the vehicles data from passages data
 @author: naqavi
 """
 
-from set_price import set_price
+# from set_price import set_price
 import pandas as pd
 
-def create_veh_pass():
-    passages = set_price()
+def create_veh_pass(passages):
+    #passages = set_price()
     
     # Extract vehicle-specific information
     x = passages.groupby(by = 'AnonymRegno').first()

@@ -8,7 +8,7 @@ Created on Thu Apr  7 10:04:47 2022
 import importPassages
 from datetime import datetime
 from datetime import time
-
+import numpy as np
 
 def set_price():
     passages = importPassages.get_passages()
@@ -38,8 +38,44 @@ def set_price():
     # the same for 2012.
     passages = passages[passages['price'] > 0]
     # remove nan values in Kommun column
-    passages['Kommun'] = passages['Kommun'].astype(str)
+    # passages['Kommun'] = passages['Kommun'].astype(str)
+    passages[['Kommun']] = passages[['Kommun']].fillna('nan')
     passages = passages[passages['Kommun'] != 'nan']
-    passages.reset_index()
+    passages = passages[passages['Kommun'] != 'LIDINGÖ']   
+    passages['Riktning'] = passages['Riktning'].str.replace('Ut', 'UT', regex = True)
+    passages['Riktning'] = passages['Riktning'].str.replace('In', 'IN', regex = True)
+    
+    # we need to define days from start of the data collection in each year for comparison
+    # because the data collection days have a partial overlap in the two years
+    passages['dayFromStart'] = 0
+    def Fill_daysFromStart(passages,date, day):
+        passages['dayFromStart'] = np.where(passages['Passagedatum'] == date, day, passages['dayFromStart'])
+        return passages
+    
+    passages = Fill_daysFromStart(passages,'2012-05-23',1)
+    passages = Fill_daysFromStart(passages,'2012-05-24',2)
+    passages = Fill_daysFromStart(passages,'2012-05-25',3)
+    passages = Fill_daysFromStart(passages,'2012-05-28',4)
+    passages = Fill_daysFromStart(passages,'2012-05-29',5)
+    passages = Fill_daysFromStart(passages,'2012-05-30',6)
+    passages = Fill_daysFromStart(passages,'2012-05-31',7)
+    passages = Fill_daysFromStart(passages,'2012-05-01',8)
+    passages = Fill_daysFromStart(passages,'2012-05-04',9)
+
+    passages = Fill_daysFromStart(passages,'2013-05-23',1)
+    passages = Fill_daysFromStart(passages,'2013-05-24',2)
+    passages = Fill_daysFromStart(passages,'2013-05-27',3)
+    passages = Fill_daysFromStart(passages,'2013-05-28',4)
+    passages = Fill_daysFromStart(passages,'2013-05-29',5)
+    passages = Fill_daysFromStart(passages,'2013-05-30',6)
+    passages = Fill_daysFromStart(passages,'2013-05-31',7)
+    passages = Fill_daysFromStart(passages,'2013-05-03',8)
+    passages = Fill_daysFromStart(passages,'2013-05-04',9) 
+    
+    passages.reset_index(inplace = True,drop = True)
+    # this line gets the first word in the paying stations 
+    passages['stations'] = [passages.Betalstation[i].split(' ')[0] for i in range(len(passages))]
+    
+
     del price1, price2, price3, price4, price5, price6, price7, price8, price9
     return passages
