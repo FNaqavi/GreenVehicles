@@ -65,41 +65,28 @@ pass1 = pd.merge(pass1, p_assigned1, on="AnonymRegno",
                  how="outer", validate="many_to_one")
 pass1.dropna(inplace=True)
 
-# seperate data available in both years vs. one year
-years = pass1.groupby(by='AnonymRegno').year.unique()
-years = years.reset_index()
-length = years.apply(lambda year: year.str.len())
-years['yrs'] = length['year']
-years = years.drop(columns=['year'])
-pass1 = pd.merge(years, pass1, on="AnonymRegno",
-                 how="outer", validate="one_to_many")
-pass1.dropna(inplace=True)
-del length, years
-
-# only keep the values of pass1 that are in both years
-pass1 = pass1[pass1['yrs'] == 2]
-
-# %% only keep the values that are in both years (morning)
-df = pass1
-df_m = df[df['secs']<36000]
-
-def get_both_year_data(df, df_main):
+def get_boht_years(df):
     years = df.groupby(by='AnonymRegno').year.unique()
     years = years.reset_index()
     length = years.apply(lambda year: year.str.len())
     years['yrs'] = length['year']
     years = years.drop(columns=['year'])
-    df = pd.merge(years, df_main, on="AnonymRegno",
-                     how="inner", validate="one_to_many")
+    df = pd.merge(years, df, on="AnonymRegno",
+                     how="outer", validate="one_to_many")
     df.dropna(inplace=True)
     del length, years
     return df
 
-df_m = get_both_year_data(df_m, df)
+
+# %% only keep the values that are in both years (morning)
+df = pass1
 df_m = df[df['secs']<36000]
+df_m = get_boht_years(df_m)
+df_m = df_m[df_m['yrs'] == 2]
 
 df_mh = df_m[df_m['inc']>=366800]
 df_ml = df_m[df_m['inc']<366800]
+
 
 
 #%% box plot of frequencies
@@ -202,7 +189,7 @@ plt_hist_freq_time(df_ml12, df_ml13, 'Histogram of time of day for low income gr
 def get_pdf_y_to_plot(x, time, unequality):
     if unequality == 'smaller':
         x = x[x['secs'] <= time]        
-        x = x['secs']/(60*1)  # change to two minutes
+        x = x['secs']/(1*1)  # change to two minutes
         n, xedges, patches = plt.hist(x, bins=100, alpha=0.5)
         xcenters = (xedges[:-1] + xedges[1:]) / 2
         y = n
@@ -214,7 +201,7 @@ def get_pdf_y_to_plot(x, time, unequality):
         y = f.fitted_pdf['norm']     
     if unequality == 'larger':
         x = x[x['secs'] > time]
-        x = x['secs']/(60*1)  # change to two minutes
+        x = x['secs']/(1*1)  # change to two minutes
         n, xedges, patches = plt.hist(x, bins=100, alpha=0.5)
         xcenters = (xedges[:-1] + xedges[1:]) / 2
         y = n
@@ -232,22 +219,22 @@ def get_pdf_y_to_plot(x, time, unequality):
 
 # %% get best fit for mornings and evenings 2012 and 2013
 
-# x_mh12, y_mh12, f1m = get_pdf_y_to_plot(df_mh12, 36000, 'smaller')    # high inc morning 2012 
-# x_ml12, y_ml12, f2m = get_pdf_y_to_plot(df_ml12, 36000, 'smaller')    # low inc morning 2012 
-# x_mh13, y_mh13, f3m = get_pdf_y_to_plot(df_mh13, 36000, 'smaller')    # high inc morning 2013 
-# x_ml13, y_ml13, f4m = get_pdf_y_to_plot(df_ml13, 36000, 'smaller')    # low inc morning 2013 
-# plt.show()
+x_mh12, y_mh12, f1 = get_pdf_y_to_plot(df_mh12, 36000, 'smaller')    # high inc morning 2012 
+x_ml12, y_ml12, f2 = get_pdf_y_to_plot(df_ml12, 36000, 'smaller')    # low inc morning 2012 
+x_mh13, y_mh13, f3 = get_pdf_y_to_plot(df_mh13, 36000, 'smaller')    # high inc morning 2013 
+x_ml13, y_ml13, f4 = get_pdf_y_to_plot(df_ml13, 36000, 'smaller')    # low inc morning 2013 
+plt.show()
 
 #%% plot the fitted normal pdfs
 
-# plt.plot(x_mh12/60, y_mh12, color = 'C0', label = 'high income 2012')
-# plt.plot(x_ml12/60, y_ml12, color = 'C1', label = 'low income 2012')
-# plt.plot(x_mh13/60, y_mh13, color = 'C0', linestyle='dashed', label = 'high income 2013')
-# plt.plot(x_ml13/60, y_ml13, color = 'C1', linestyle='dashed', label = 'low income 2013')
-# plt.grid(axis='both', zorder=-1.0, alpha = 0.3)
-# plt.legend(loc = 'best')
-# # scale_price(0.0001)
-# plt.show()
+plt.plot(x_mh12/60, y_mh12, color = 'C0', label = 'high income 2012')
+plt.plot(x_ml12/60, y_ml12, color = 'C1', label = 'low income 2012')
+plt.plot(x_mh13/60, y_mh13, color = 'C0', linestyle='dashed', label = 'high income 2013')
+plt.plot(x_ml13/60, y_ml13, color = 'C1', linestyle='dashed', label = 'low income 2013')
+plt.grid(axis='both', zorder=-1.0, alpha = 0.3)
+plt.legend(loc = 'best')
+# scale_price(0.0001)
+plt.show()
 
 #%% check peak point for a fitted pdf
 # idx  = np.where(f1m.fitted_pdf['norm'] == max(f1m.fitted_pdf['norm']))
