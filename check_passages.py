@@ -3,7 +3,10 @@
 Created on Tue Apr 12 15:08:32 2022
 
 @author: naqavi
+
+This takes ages to run! why??!
 """
+
 
 
 from GV_exepmtion_kommun_assignment import GV_share_assignment
@@ -13,7 +16,7 @@ from datetime import datetime
 import numpy as np
 import warnings
 warnings.filterwarnings('ignore')
-
+#%% 
 p_assigned, passages = GV_share_assignment()
 veh_year, pass_veh = create_veh_pass(passages)
 
