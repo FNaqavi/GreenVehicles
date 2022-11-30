@@ -104,7 +104,7 @@ df_ml = df_m[df_m['inc']<366800]
 
 #%% box plot of frequencies
 
-def box_plot_inc(df):
+def box_plot(df):
     df = df.groupby(by=['AnonymRegno', 'year']).count().secs.rename('frq')
     df = df.reset_index()
     plt.boxplot(df.frq)
@@ -129,8 +129,8 @@ def box_plot_inc(df):
 
 #%% Get cars with more than 3 and less than number of outliars frequencies in the mornings in both years
 
-def plt_freq(df):
-    outliers, boxes, medians, whiskers = box_plot_inc(df)
+def get_freq(df):
+    outliers, boxes, medians, whiskers = box_plot(df)
     frq_out = min(outliers[0])
     df_grp = df.groupby(by=['AnonymRegno', 'year']).count().secs.rename('frq')
     df_grp = df_grp.reset_index()
@@ -142,14 +142,14 @@ def plt_freq(df):
     y2 = y2[y2.frq<frq_out]
     return y1, y2
 
-y1, y2= plt_freq(df_m)
+y1, y2= get_freq(df_m)
 
 df_mh = df_mh[df_mh['AnonymRegno'].isin(y1.AnonymRegno)]
 df_ml = df_ml[df_ml['AnonymRegno'].isin(y1.AnonymRegno)]
 
 
 
-# %% GV sum(frequencies) for the cars available in both years
+# %% GV sum(frequencies) for the cars available in both years mornings, no outliar freq
 
 def plt_freq_sum(df, title):
     df_grp = df.groupby(by=['AnonymRegno', 'year']).count().secs.rename('frq')
@@ -170,6 +170,7 @@ def plt_freq_sum(df, title):
 # plt_freq(pass1)
 plt_freq_sum(df_mh, 'freq for high income GVs available in both years')
 plt_freq_sum(df_ml, 'freq for low income GVs available in both years')
+
 
 # %% plot histogram of frequencies based on time for non-repeated GV in both years
 
@@ -388,7 +389,7 @@ plt.show()
 
 #%% check how many cars from mornings are seen in the evening from low/high income
 
-y1, y2= plt_freq(df_m)
+y1, y2= get_freq(df_m)
 # y1e, y2e= plt_freq(df_e)
 
 x1 = df_mh12.groupby(by=['AnonymRegno']).count().secs.rename('frq').reset_index().set_index('AnonymRegno')
